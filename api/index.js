@@ -4,9 +4,9 @@ import dotenv from 'dotenv';
 import userRouter from './routes/user.route.js';
 import authRouter from './routes/auth.route.js';
 
-dotenv.config();
-
 const API_PREFIX = '/api';
+
+dotenv.config();
 
 mongoose
   .connect(process.env.DB_CONNECTION_STRING)
@@ -23,3 +23,13 @@ app.listen(3000, () => {
 
 app.use(`${API_PREFIX}/user`, userRouter);
 app.use(`${API_PREFIX}/auth`, authRouter);
+
+app.use((err, req, res, next) => {
+  const statusCode = err.statusCode || 500;
+  const message = err.message || 'Internal Server Error';
+  res.status(statusCode).json({
+    success: false,
+    statusCode,
+    message,
+  });
+});
