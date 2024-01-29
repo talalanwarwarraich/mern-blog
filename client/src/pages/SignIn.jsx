@@ -2,11 +2,8 @@ import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Label, TextInput, Button, Alert, Spinner } from 'flowbite-react';
 import { useDispatch, useSelector } from 'react-redux';
-import {
-  signInStart,
-  signInSuccess,
-  signInFailure,
-} from '../redux/user/userSlice.js';
+import { signInSuccess, signInFailure } from '../redux/user/userSlice.js';
+import OAuth from '../components/OAuth.jsx';
 
 const SignIn = () => {
   const [formData, setFormData] = useState({});
@@ -26,16 +23,12 @@ const SignIn = () => {
       return dispatch(signInFailure('Please fill all the fields.'));
     }
     try {
-      dispatch(signInStart());
       const res = await fetch('/api/auth/signin', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formData),
       });
       const data = await res.json();
-      if (!data.success) {
-        dispatch(signInFailure(data.message));
-      }
       if (res.ok) {
         dispatch(signInSuccess(data));
         navigate('/');
@@ -95,9 +88,10 @@ const SignIn = () => {
                   <span className='pl-3'>loading...</span>
                 </>
               ) : (
-                'Sign Up'
+                'Sign In'
               )}
             </Button>
+            <OAuth />
           </form>
           <div className='flex gap-2 text-sm mt-5'>
             <span>{`Doesn't have an account?`}</span>
