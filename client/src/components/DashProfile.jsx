@@ -8,7 +8,12 @@ import { Alert, Button, TextInput } from 'flowbite-react';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { CircularProgressbar } from 'react-circular-progressbar';
 import 'react-circular-progressbar/dist/styles.css';
-import { useSelector } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
+import {
+  updateFailure,
+  updateStart,
+  updateSuccess,
+} from '../redux/user/userSlice';
 
 const DashProfile = () => {
   const { currentUser } = useSelector((state) => state.user);
@@ -16,7 +21,17 @@ const DashProfile = () => {
   const [imageUrl, setImageUrl] = useState(null);
   const [uploadProgress, setUploadProgress] = useState(null);
   const [fileUploadError, setFileUploadError] = useState(null);
+  const [formData, setFormData] = useState({});
   const filePickerRef = useRef();
+  const dispatch = useDispatch();
+
+  const handleChange = (e) => {
+    console.log(e);
+    setFormData((data) => ({
+      ...data,
+      [e.target.id]: e.target.value.trim(),
+    }));
+  };
 
   const handleImageChange = (e) => {
     const file = e.target.files[0];
@@ -52,6 +67,7 @@ const DashProfile = () => {
       () => {
         getDownloadURL(uploadTask.snapshot.ref).then((downloadURL) => {
           setImageUrl(downloadURL);
+          setFormData((data) => ({ ...data, profilePic: downloadURL }));
         });
       }
     );
@@ -63,6 +79,29 @@ const DashProfile = () => {
 
     uploadImage();
   }, [image, uploadImage]);
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (!Object.keys(formData).length) return;
+
+    try {
+      dispatch(updateStart());
+      const res = await fetch(`/api/user/update/${currentUser._id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(formData),
+      });
+      const data = await res.json();
+      console.log(data);
+      if (!res.ok) {
+        dispatch(updateFailure(data.message));
+      } else {
+        dispatch(updateSuccess(data));
+      }
+    } catch (error) {
+      dispatch(updateFailure(error.message));
+    }
+  };
 
   const showUploadProgress = () => {
     if (!uploadProgress) return;
@@ -93,7 +132,7 @@ const DashProfile = () => {
   return (
     <div className='max-w-lg max-auto p-3 w-full'>
       <h1 className='my-7 text-center font-semibold text-3xl'>profile</h1>
-      <form className='flex flex-col gap-4'>
+      <form onSubmit={handleSubmit} className='flex flex-col gap-4'>
         <input
           onChange={handleImageChange}
           type='file'
@@ -120,18 +159,22 @@ const DashProfile = () => {
           id='username'
           placeholder='username'
           defaultValue={currentUser.username}
+          onChange={handleChange}
         />
         <TextInput
           type='text'
           id='email'
           placeholder='email'
           defaultValue={currentUser.email}
+          onChange={handleChange}
+          disabled
         />
         <TextInput
-          type='text'
+          type='password'
           id='password'
           placeholder='password'
           defaultValue={currentUser.password}
+          onChange={handleChange}
         />
         <Button type='submit' gradientDuoTone={'purpleToBlue'} outline>
           Update

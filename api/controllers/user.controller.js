@@ -8,7 +8,7 @@ export const test = (req, res) => {
 
 export const updateUser = async (req, res, next) => {
   const { userId } = req.params;
-  const { password, username, profilePic } = req.body;
+  const { password, username, email, profilePic } = req.body;
   if (req.user.id !== userId) {
     return next(errorHandler(403, 'You can only update your own profile.'));
   }
@@ -43,6 +43,7 @@ export const updateUser = async (req, res, next) => {
         $set: {
           username,
           password,
+          email,
           profilePic,
         },
       },
