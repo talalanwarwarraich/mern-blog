@@ -5,7 +5,7 @@ import {
   uploadBytesResumable,
 } from 'firebase/storage';
 import { Alert, Button, TextInput } from 'flowbite-react';
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { CircularProgressbar } from 'react-circular-progressbar';
 import 'react-circular-progressbar/dist/styles.css';
 import { useSelector } from 'react-redux';
@@ -26,13 +26,7 @@ const DashProfile = () => {
     setImageUrl(URL.createObjectURL(file));
   };
 
-  useEffect(() => {
-    if (!image) return;
-
-    uploadImage();
-  }, [image]);
-
-  const uploadImage = async () => {
+  const uploadImage = useCallback(async () => {
     setFileUploadError(null);
     const storage = getStorage();
     const fileName = new Date().getTime() + image.name;
@@ -61,7 +55,14 @@ const DashProfile = () => {
         });
       }
     );
-  };
+  }, [image]);
+
+  useEffect(() => {
+    console.log('rendering...');
+    if (!image) return;
+
+    uploadImage();
+  }, [image, uploadImage]);
 
   const showUploadProgress = () => {
     if (!uploadProgress) return;
